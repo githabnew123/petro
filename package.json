@@ -27,6 +27,7 @@
     },
     "dependencies": {
         "@inertiajs/inertia-react": "^0.8.1",
+        "print-js": "^1.6.0",
         "react-router-dom": "^7.4.0"
     }
 }

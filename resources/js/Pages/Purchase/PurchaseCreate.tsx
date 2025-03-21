@@ -91,17 +91,6 @@ const PurchaseCreate: React.FC<{ suppliers: any[], items: any[] }> = ({ supplier
                 />
                 {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
-            <div className="mb-4">
-                <label className="block text-gray-700">Quantity</label>
-                <input
-                    type="number"
-                    value={qty}
-                    onChange={handleQtyChange}
-                    min="1"
-                    required
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
-                />
-            </div>
             < div className="mb-4">
                 <label className="block text-gray-700">Item</label>
                 <select
@@ -116,6 +105,17 @@ const PurchaseCreate: React.FC<{ suppliers: any[], items: any[] }> = ({ supplier
                     ))}
                 </select>
             </div>
+            <div className="mb-4">
+                <label className="block text-gray-700">Quantity</label>
+                <input
+                    type="number"
+                    value={qty}
+                    onChange={handleQtyChange}
+                    min="1"
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                />
+            </div>            
             <div className="mb-4">
                 <label className="block text-gray-700">Amount</label>
                 <input
