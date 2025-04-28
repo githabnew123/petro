@@ -12,10 +12,27 @@ use Inertia\Inertia;
 
 class PurchaseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $purchases = Purchase::with(['supplier', 'item'])->get(); // Fetch all purchases with related supplier and item
-        return Inertia::render('Purchase/PurchaseIndex', ['purchases' => $purchases]); // Render the index view
+        $search = $request->input('search');
+
+        $purchases = Purchase::with(['supplier', 'item'])
+            ->when($search, function ($query, $search) {
+                $query->whereHas('supplier', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                    ->orWhere('car_number', 'like', "%{$search}%");
+            })
+            ->orderBy('date', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Purchase/PurchaseIndex', [
+            'purchases' => $purchases,
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
     }
 
     public function create()

@@ -10,10 +10,24 @@ use Inertia\Inertia;
 
 class ItemController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $items = Item::all(); // Fetch all items
-        return Inertia::render('Item/ItemIndex', ['items' => $items]); // Render the index view
+        $search = $request->input('search');
+
+        $items = Item::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Item/ItemIndex', [
+            'items' => $items,
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
     }
 
     public function create()

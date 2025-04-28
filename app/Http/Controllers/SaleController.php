@@ -13,10 +13,29 @@ use Inertia\Inertia;
 
 class SaleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sales = Sale::with('customer', 'item', 'paymentMethod')->get();
-        return Inertia::render('Sale/SaleIndex', ['sales' => $sales]);
+        $search = $request->input('search');
+
+        $sales = Sale::with(['customer', 'item', 'paymentMethod'])
+            ->when($search, function ($query, $search) {
+                $query->whereHas('customer', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('item', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Sale/SaleIndex', [
+            'sales' => $sales,
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
     }
 
     public function create()

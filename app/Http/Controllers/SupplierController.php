@@ -10,10 +10,25 @@ use Inertia\Inertia;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::all(); // Fetch all suppliers
-        return Inertia::render('Supplier/SupplierIndex', ['suppliers' => $suppliers]); // Render the index view
+        $search = $request->input('search');
+
+        $query = Supplier::query();
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('phone_no', 'like', "%{$search}%");
+        }
+
+        $suppliers = $query->orderBy('id', 'desc')->paginate(5)->withQueryString(); // paginate 5 per page
+
+        return Inertia::render('Supplier/SupplierIndex', [
+            'suppliers' => $suppliers,
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
     }
 
     public function create()

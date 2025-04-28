@@ -10,10 +10,26 @@ use Inertia\Inertia;
 
 class PaymentMethodController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $paymentMethods = PaymentMethod::all(); // Fetch all payment methods
-        return Inertia::render('PaymentMethod/PaymentMethodIndex', ['paymentMethods' => $paymentMethods]); // Render the index view
+        $search = $request->input('search');
+
+        $paymentMethods = PaymentMethod::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('owner', 'like', "%{$search}%")
+                    ->orWhere('number', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('PaymentMethod/PaymentMethodIndex', [
+            'paymentMethods' => $paymentMethods,
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
     }
 
     public function create()

@@ -10,10 +10,25 @@ use Inertia\Inertia;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::all();
-        return Inertia::render('Customer/CustomerIndex', ['customers' => $customers]); // Render the index view
+        $search = $request->input('search');
+
+        $customers = Customer::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone_no', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->paginate(10)
+            ->withQueryString(); // Important to keep search query in pagination links
+
+        return Inertia::render('Customer/CustomerIndex', [
+            'customers' => $customers,
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
     }
 
     public function create()
