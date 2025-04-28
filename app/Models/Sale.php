@@ -11,14 +11,14 @@ class Sale extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'customer', 
-        'item', 
-        'retail_price', 
-        'qty', 
-        'car_number', 
-        'payment', 
-        'payment_method', 
-        'transfer_account', 
+        'customer',
+        'item',
+        'retail_price',
+        'qty',
+        'car_number',
+        'payment',
+        'payment_method',
+        'transfer_account',
         'carrier_number',
         'total',
         'balance',
@@ -37,5 +37,31 @@ class Sale extends Model
     public function paymentMethod()
     {
         return $this->belongsTo(PaymentMethod::class, 'payment_method');
+    }
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function getPaidAmountAttribute()
+    {
+        return $this->payments->sum('amount');
+    }
+
+    public function getBalanceAttribute()
+    {
+        return $this->total - $this->paid_amount;
+    }
+    public static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($sale) {
+            $stock = Stock::where('item_id', $sale->item_id)->first();
+            if ($stock) {
+                $stock->quantity -= $sale->qty;
+                $stock->save();
+            }
+        });
     }
 }

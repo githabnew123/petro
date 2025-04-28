@@ -25,4 +25,16 @@ class Purchase extends Model
     {
         return $this->belongsTo(Item::class);
     }
+    public static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($purchase) {
+            $stock = Stock::firstOrCreate(['item_id' => $purchase->item_id]);
+            $stock->quantity += $purchase->qty;
+            $stock->unit_cost = $purchase->amount;
+            $stock->total_cost = $purchase->total;
+            $stock->save();
+        });
+    }
 }

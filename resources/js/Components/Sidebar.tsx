@@ -9,6 +9,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSection }) => {
     const sections = [
         { label: 'Sale', value: 'Sale', route: '/' },
         { label: 'Sale Summary', value: 'Sale Summary', route: '/sale-summary' },
+        { label: 'Stock', value: 'Stock', route: '/stock' },
         {
             label: 'Inventory',
             children: [
