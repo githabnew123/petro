@@ -29,14 +29,14 @@ const PurchaseCreate: React.FC<{ suppliers: any[], items: any[] }> = ({ supplier
 
     const validateCarNumber = (value: string) => {
         // Regex to match the format: CODE-NUMBER or CODE-ALPHANUMERIC
-        const regex = /^(AYY|BGO|CHN|KYH|KCN|KYN|MGY|MDY|MON|NPW|RKE|SGG|SHN|TNI|YGN)-(\d{1,2} \d[A-Z]-\d{1,4})$/;
+        const regex = /(\d{1,2}[A-Z]-\d{1,4})$/;
         return regex.test(value);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateCarNumber(carNumber)) {
-            setError('Car number must be in the format: CODE-NUMBER (e.g., AYY-5 7A-2222)');
+            setError('Car number must be in the format: CODE-NUMBER (e.g.,7A-2222)');
             return;
         }
         setError('');

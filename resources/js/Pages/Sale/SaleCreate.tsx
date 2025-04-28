@@ -34,7 +34,7 @@ const SaleCreate: React.FC<SaleFormProps> = ({ customers = [], items = [], payme
 
     // Validate car number format
     const validateCarNumber = (value: string) => {
-      const regex = /^(AYY|BGO|CHN|KYH|KCN|KYN|MGY|MDY|MON|NPW|RKE|SGG|SHN|TNI|YGN)-(\d{1,2} \d[A-Z]-\d{1,4})$/;
+      const regex = /(\d{1,2}[A-Z]-\d{1,4})$/;
       return regex.test(value);
     };
 

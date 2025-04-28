@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\PaymentMethod;
+use App\Models\StockBalance;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -76,6 +77,12 @@ class SaleController extends Controller
             'balance' => $request->balance
         ]);
 
+        StockBalance::create([
+            'car_number' => $request->car_number,
+            'item_id' => $request->item,
+            'issue_quantity' => $request->qty,
+        ]);
+
         return redirect()->route('sales.index')->with('success', 'Sale created successfully.');
     }
 
@@ -126,6 +133,26 @@ class SaleController extends Controller
             'total' => $request->total,
             'balance' => $request->balance,
         ]);
+
+        $stock = StockBalance::where('car_number', $request->car_number)
+            ->where('item_id', $request->item_id)
+            ->whereDate('created_at', $sale->created_at->toDateString())
+            ->first();
+
+        if ($stock) {
+            $stock->update([
+                'car_number' => $request->car_number,
+                'item_id' => $request->item_id,
+                'issue_quantity' => $request->qty,
+            ]);
+        } else {
+            // Create new stock record if no exact match found
+            StockBalance::create([
+                'car_number' => $request->car_number,
+                'item_id' => $request->item_id,
+                'issue_quantity' => $request->qty,
+            ]);
+        }
 
         return redirect()->route('sales.index')->with('success', 'Sale updated successfully.');
     }

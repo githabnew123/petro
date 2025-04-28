@@ -9,11 +9,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSection }) => {
     const sections = [
         { label: 'Sale', value: 'Sale', route: '/' },
         { label: 'Sale Summary', value: 'Sale Summary', route: '/sale-summary' },
-        { label: 'Stock', value: 'Stock', route: '/stock' },
         {
             label: 'Inventory',
             children: [
                 { label: 'Purchase', value: 'Purchase', route: '/purchases' },
+                { label: 'Stock', value: 'Stock', route: '/stocks' },
+                { label: 'Stock Balance', value: 'Stock Balance', route: '/stockbalances' }
             ]
         },
         {
