@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Inertia } from '@inertiajs/inertia';
 import { Link } from '@inertiajs/inertia-react';
 import Layout from '../../Layouts/Layout';
@@ -46,7 +46,7 @@ const StockBalanceIndex: React.FC<StockBalancePageProps> = ({ stockBalances, fil
   const handleViewTypeChange = (type: string) => {
     setViewType(type);
     Inertia.get('/stockbalances', { search, view_type: type });
-  };console.log(stockBalances.data);
+  }; console.log(stockBalances.data);
 
   return (
     <Layout selectedSection="Stock Balance">
@@ -127,7 +127,10 @@ const StockBalanceIndex: React.FC<StockBalancePageProps> = ({ stockBalances, fil
                           {stock.total_quantity || stock.quantity}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                          {new Date(stock.last_updated || stock.updated_at).toLocaleDateString()}
+                          {stock.updated_at
+                            ? new Date(stock.updated_at).toLocaleDateString()
+                            : 'N/A'
+                          }
                         </td>
                       </>
                     ) : (
@@ -142,7 +145,10 @@ const StockBalanceIndex: React.FC<StockBalancePageProps> = ({ stockBalances, fil
                           {stock.issue_quantity}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                          {new Date(stock.updated_at).toLocaleDateString()}
+                          {stock.updated_at
+                            ? new Date(stock.updated_at).toLocaleDateString()
+                            : 'N/A'
+                          }
                         </td>
                       </>
                     )}
@@ -165,8 +171,8 @@ const StockBalanceIndex: React.FC<StockBalancePageProps> = ({ stockBalances, fil
               }}
               disabled={!link.url}
               className={`px-4 py-2 rounded-md ${link.active
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
               dangerouslySetInnerHTML={{ __html: link.label }}
             />

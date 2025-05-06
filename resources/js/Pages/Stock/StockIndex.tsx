@@ -125,13 +125,18 @@ const StockIndex: React.FC<StockPageProps> = ({ stocks, filters }) => {
                     </td>
                     <td className="border px-4 py-2">{stock.total_quantity || stock.quantity}</td>
                     <td className="border px-4 py-2">
-                      {(stock.average_cost || stock.unit_cost)}
+                      {stock.average_cost || stock.unit_cost}
                     </td>
                     <td className="border px-4 py-2">
-                      {(stock.total_cost || stock.total_cost)}
+                      {stock.total_cost || stock.total_cost}
                     </td>
                     <td className="border px-4 py-2">
-                      {new Date(stock.last_updated || stock.updated_at).toLocaleDateString()}
+                      {stock.last_updated
+                        ? new Date(stock.last_updated).toLocaleDateString()
+                        : stock.updated_at
+                          ? new Date(stock.updated_at).toLocaleDateString()
+                          : 'N/A'
+                      }
                     </td>
                   </>
                 ) : (
@@ -142,7 +147,10 @@ const StockIndex: React.FC<StockPageProps> = ({ stocks, filters }) => {
                     <td className="border px-4 py-2">{stock.unit_cost}</td>
                     <td className="border px-4 py-2">{stock.total_cost}</td>
                     <td className="border px-4 py-2">
-                      {new Date(stock.updated_at).toLocaleDateString()}
+                      {stock.updated_at
+                        ? new Date(stock.updated_at).toLocaleDateString()
+                        : 'N/A'
+                      }
                     </td>
                   </>
                 )}

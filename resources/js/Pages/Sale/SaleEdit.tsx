@@ -98,9 +98,9 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
         e.preventDefault();
         setIsSubmitting(true);
         setError('');
-
+    
         try {
-            const response = await Inertia.put(`/sales/${sale.id}`, {
+            await Inertia.put(`/sales/${sale.id}`, {
                 customer: formData.customerId,
                 item: formData.itemId,
                 retail_price: formData.retailPrice,
@@ -122,15 +122,18 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                 },
                 preserveScroll: true,
             });
-
-            if (response && response.status === 409) {
-                setError('The data has been modified by another user. Please refresh and try again.');
-            }
-
+    
         } catch (err) {
-            if (err.response && err.response.status === 409) {
-                setError('Conflict detected. Please refresh the page and try again.');
+            // Type guard to check if err is an instance of Error
+            if (err instanceof Error) {
+                // Handle known error types
+                if (err.message.includes('409')) {
+                    setError('Conflict detected. Please refresh the page and try again.');
+                } else {
+                    setError('An unexpected error occurred: ' + err.message);
+                }
             } else {
+                // Handle unknown error
                 setError('An unexpected error occurred. Please try again.');
             }
         } finally {

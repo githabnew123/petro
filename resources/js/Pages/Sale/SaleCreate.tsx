@@ -9,6 +9,13 @@ interface SaleFormProps {
   paymentMethods: { id: string; name: string }[];
 }
 
+interface Car {
+  car_number: string;
+}
+
+
+
+
 const SaleCreate: React.FC<SaleFormProps> = ({ customers = [], items = [], paymentMethods = [] }) => {
   const [customerId, setCustomerId] = useState('');
   const [itemId, setItemId] = useState('');
@@ -24,7 +31,7 @@ const SaleCreate: React.FC<SaleFormProps> = ({ customers = [], items = [], payme
   const [balance, setBalance] = useState(0);
 
   const [availableQty, setAvailableQty] = useState<number | null>(null);
-  const [carNumbers, setCarNumbers] = useState<string[]>([]);
+  const [carNumbers, setCarNumbers] = useState<Car[]>([]);
 
 
   useEffect(() => {
@@ -252,7 +259,7 @@ const SaleCreate: React.FC<SaleFormProps> = ({ customers = [], items = [], payme
           >
             <option value="">Select Car Number</option>
             {(carNumbers).map(car => (
-              <option key={car} value={car['car_number']}>{car['car_number']}</option>
+              <option key={car['car_number']} value={car['car_number']}>{car['car_number']}</option>
             ))}
           </select>
         </div>
