@@ -41,53 +41,101 @@ interface Props {
 }
 
 const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) => {
-    const [customerId, setCustomerId] = useState(sale.customer.id);
-    const [itemId, setItemId] = useState(sale.item.id);
-    const [retailPrice, setRetailPrice] = useState(sale.retail_price);
-    const [qty, setQty] = useState(sale.qty);
-    const [paymentMethodId, setPaymentMethodId] = useState(sale.payment_method.id);
-    const [carNumber, setCarNumber] = useState(sale.car_number);
-    const [payment, setPayment] = useState(sale.payment);
-    const [transferAccount, setTransferAccount] = useState(sale.transfer_account);
-    const [carrierNumber, setCarrierNumber] = useState(sale.carrier_number);
+    const [formData, setFormData] = useState({
+        customerId: sale.customer.id,
+        itemId: sale.item.id,
+        retailPrice: sale.retail_price,
+        qty: sale.qty,
+        paymentMethodId: sale.payment_method.id,
+        carNumber: sale.car_number,
+        payment: sale.payment,
+        transferAccount: sale.transfer_account || '',
+        carrierNumber: sale.carrier_number || '',
+    });
+
+    const [total, setTotal] = useState(sale.total);
+    const [balance, setBalance] = useState(sale.balance);
     const [error, setError] = useState('');
-    const [total, setTotal] = useState<number>(sale.total || 0);
-    const [balance, setBalance] = useState<number>(sale.balance || 0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        const calculatedTotal = retailPrice * qty;
+        const calculatedTotal = formData.retailPrice * formData.qty;
         setTotal(calculatedTotal);
-        setBalance(calculatedTotal - payment);
-    }, [retailPrice, qty, payment]);
+        setBalance(calculatedTotal - formData.payment);
+    }, [formData.retailPrice, formData.qty, formData.payment]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
 
-        const validateCarNumber = (value: string) => {
-            const regex = /(\d{1,2}[A-Z]-\d{1,4})$/;
-            return regex.test(value);
-        };
+        setFormData(prev => ({
+            ...prev,
+            [name]: name.includes('Id') ? Number(value) : value
+        }));
 
-        if (!validateCarNumber(carNumber)) {
-            setError('Car number must be in the format: CODE-NUMBER (e.g., AYY-5 7A-2222)');
-            return;
+        // Update retail price when item changes
+        if (name === 'itemId') {
+            const selectedItem = items.find(i => i.id === Number(value));
+            if (selectedItem) {
+                setFormData(prev => ({
+                    ...prev,
+                    retailPrice: selectedItem.price
+                }));
+            }
         }
+    };
 
+    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        const numValue = parseFloat(value) || 0;
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: name === 'qty' ? Math.max(1, numValue) : Math.max(0, numValue)
+        }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
         setError('');
 
-        Inertia.put(`/sales/${sale.id}`, {
-            customer: customerId,
-            item: itemId,
-            retail_price: retailPrice,
-            qty,
-            payment_method: paymentMethodId,
-            car_number: carNumber,
-            payment,
-            transfer_account: transferAccount,
-            carrier_number: carrierNumber,
-            total,
-            balance,
-        });
+        try {
+            const response = await Inertia.put(`/sales/${sale.id}`, {
+                customer: formData.customerId,
+                item: formData.itemId,
+                retail_price: formData.retailPrice,
+                qty: formData.qty,
+                payment_method: formData.paymentMethodId,
+                car_number: formData.carNumber,
+                payment: formData.payment,
+                transfer_account: formData.transferAccount,
+                carrier_number: formData.carrierNumber,
+                total,
+                balance,
+            }, {
+                onError: (errors) => {
+                    if (errors.message) {
+                        setError(errors.message);
+                    } else {
+                        setError('An error occurred while updating the sale. Please try again.');
+                    }
+                },
+                preserveScroll: true,
+            });
+
+            if (response && response.status === 409) {
+                setError('The data has been modified by another user. Please refresh and try again.');
+            }
+
+        } catch (err) {
+            if (err.response && err.response.status === 409) {
+                setError('Conflict detected. Please refresh the page and try again.');
+            } else {
+                setError('An unexpected error occurred. Please try again.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -100,8 +148,9 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                 <div className="col-span-1">
                     <label className="block text-gray-700">Customer</label>
                     <select
-                        value={customerId}
-                        onChange={(e) => setCustomerId(Number(e.target.value))}
+                        name="customerId"
+                        value={formData.customerId}
+                        onChange={handleChange}
                         required
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
                     >
@@ -115,13 +164,9 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                 <div className="col-span-1">
                     <label className="block text-gray-700">Item</label>
                     <select
-                        value={itemId}
-                        onChange={(e) => {
-                            const selectedItemId = Number(e.target.value);
-                            setItemId(selectedItemId);
-                            const item = items.find(i => i.id === selectedItemId);
-                            setRetailPrice(item ? item.price : 0);
-                        }}
+                        name="itemId"
+                        value={formData.itemId}
+                        onChange={handleChange}
                         required
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
                     >
@@ -136,8 +181,11 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                     <label className="block text-gray-700">Retail Price</label>
                     <input
                         type="number"
-                        value={retailPrice}
-                        onChange={(e) => setRetailPrice(parseFloat(e.target.value) || 0)}
+                        name="retailPrice"
+                        value={formData.retailPrice}
+                        onChange={handleNumberChange}
+                        min="0"
+                        step="0.01"
                         required
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
                     />
@@ -148,9 +196,10 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                     <label className="block text-gray-700">Quantity</label>
                     <input
                         type="number"
-                        value={qty}
-                        min={1}
-                        onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                        name="qty"
+                        value={formData.qty}
+                        onChange={handleNumberChange}
+                        min="1"
                         required
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
                     />
@@ -160,8 +209,8 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                 <div className="col-span-1">
                     <label className="block text-gray-700">Total</label>
                     <input
-                        type="number"
-                        value={typeof total === 'number' ? total.toFixed(2) : '0.00'}
+                        type="text"
+                        value={total}
                         readOnly
                         className="w-full p-2 border bg-gray-100 rounded-md"
                     />
@@ -172,9 +221,11 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                     <label className="block text-gray-700">Payment</label>
                     <input
                         type="number"
-                        value={payment}
-                        min={0}
-                        onChange={(e) => setPayment(parseFloat(e.target.value) || 0)}
+                        name="payment"
+                        value={formData.payment}
+                        onChange={handleNumberChange}
+                        min="0"
+                        step="0.01"
                         required
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
                     />
@@ -184,8 +235,8 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                 <div className="col-span-1">
                     <label className="block text-gray-700">Credit Amount</label>
                     <input
-                        type="number"
-                        value={typeof balance === 'number' ? balance.toFixed(2) : '0.00'}
+                        type="text"
+                        value={balance}
                         readOnly
                         className="w-full p-2 border bg-gray-100 rounded-md"
                     />
@@ -195,8 +246,9 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                 <div className="col-span-1">
                     <label className="block text-gray-700">Payment Method</label>
                     <select
-                        value={paymentMethodId}
-                        onChange={(e) => setPaymentMethodId(Number(e.target.value))}
+                        name="paymentMethodId"
+                        value={formData.paymentMethodId}
+                        onChange={handleChange}
                         required
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
                     >
@@ -211,11 +263,12 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                     <label className="block text-gray-700">Car Number</label>
                     <input
                         type="text"
-                        value={carNumber}
-                        onChange={(e) => setCarNumber(e.target.value)}
+                        name="carNumber"
+                        value={formData.carNumber}
+                        onChange={handleChange}
                         required
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
-                        placeholder="e.g., AYY-5 7A-2222"
+                        placeholder="ABC-1234"
                     />
                 </div>
 
@@ -224,8 +277,9 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                     <label className="block text-gray-700">Transfer Account</label>
                     <input
                         type="text"
-                        value={transferAccount}
-                        onChange={(e) => setTransferAccount(e.target.value)}
+                        name="transferAccount"
+                        value={formData.transferAccount}
+                        onChange={handleChange}
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
                     />
                 </div>
@@ -235,14 +289,27 @@ const SaleEdit: React.FC<Props> = ({ sale, customers, items, paymentMethods }) =
                     <label className="block text-gray-700">Carrier Number</label>
                     <input
                         type="text"
-                        value={carrierNumber}
-                        onChange={(e) => setCarrierNumber(e.target.value)}
+                        name="carrierNumber"
+                        value={formData.carrierNumber}
+                        onChange={handleChange}
                         className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
                     />
                 </div>
+
                 <div className="col-span-2 flex justify-between mt-6">
-                    <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-md">
-                        Update Sale
+                    <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-md"
+                    >
+                        Refresh Data
+                    </button>
+                    <button
+                        type="submit"
+                        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-md disabled:opacity-50"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Updating...' : 'Update Sale'}
                     </button>
                 </div>
             </form>

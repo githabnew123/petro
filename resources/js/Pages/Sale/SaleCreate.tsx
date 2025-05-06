@@ -23,11 +23,43 @@ const SaleCreate: React.FC<SaleFormProps> = ({ customers = [], items = [], payme
   const [total, setTotal] = useState(0);
   const [balance, setBalance] = useState(0);
 
+  const [availableQty, setAvailableQty] = useState<number | null>(null);
+  const [carNumbers, setCarNumbers] = useState<string[]>([]);
+
+
   useEffect(() => {
     const calculatedTotal = retailPrice * qty;
     setTotal(calculatedTotal);
     setBalance(calculatedTotal - payment);
   }, [retailPrice, qty, payment]);
+
+  useEffect(() => {
+    if (!itemId) {
+      setCarNumbers([]);
+      return;
+    }
+
+    // Example: adjust this API route based on your backend logic
+    fetch(`/car-numbers?item_id=${itemId}`)
+      .then(res => res.json())
+      .then(data => {
+        setCarNumbers(data);
+      });
+
+  }, [itemId]);
+  useEffect(() => {
+    if (!itemId || !carNumber) {
+      setAvailableQty(null);
+      return;
+    }
+
+    fetch(`/stock-balance?item_id=${itemId}&car_number=${carNumber}`)
+      .then(res => res.json())
+      .then(data => {
+        setAvailableQty(data.available_qty);
+      });
+  }, [itemId, carNumber]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,6 +182,12 @@ const SaleCreate: React.FC<SaleFormProps> = ({ customers = [], items = [], payme
             required
             className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
           />
+          {availableQty !== null && (
+            <div className="col-span-2 text-sm text-blue-700">
+              Available Quantity: {availableQty}
+            </div>
+          )}
+
         </div>
 
         {/* Total */}
@@ -206,15 +244,19 @@ const SaleCreate: React.FC<SaleFormProps> = ({ customers = [], items = [], payme
         {/* Car Number */}
         <div className="col-span-2">
           <label className="block text-gray-700">Car Number</label>
-          <input
-            type="text"
+          <select
             value={carNumber}
             onChange={(e) => setCarNumber(e.target.value)}
             required
             className="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
-            placeholder="e.g., AYY-5 7A-2222"
-          />
+          >
+            <option value="">Select Car Number</option>
+            {(carNumbers).map(car => (
+              <option key={car} value={car['car_number']}>{car['car_number']}</option>
+            ))}
+          </select>
         </div>
+
 
         {/* Transfer Account */}
         <div className="col-span-1">

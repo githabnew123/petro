@@ -19,6 +19,8 @@ interface Sale {
         id: number;
         name: string;
     };
+    total: number;
+    payment: number;
 }
 
 interface SalePageProps {
@@ -75,6 +77,7 @@ const SaleIndex: React.FC<SalePageProps> = ({ sales, filters }) => {
                             <th className="border px-4 py-2">Retail Price</th>
                             <th className="border px-4 py-2">Quantity</th>
                             <th className="border px-4 py-2">Payment Method</th>
+                            <th className="border px-4 py-2">Credit Amount</th>
                             <th className="border px-4 py-2">Actions</th>
                         </tr>
                     </thead>
@@ -86,6 +89,7 @@ const SaleIndex: React.FC<SalePageProps> = ({ sales, filters }) => {
                                 <td className="border px-4 py-2">{sale.retail_price}</td>
                                 <td className="border px-4 py-2">{sale.qty}</td>
                                 <td className="border px-4 py-2">{sale.payment_method?.name || 'N/A'}</td>
+                                <td className="border px-4 py-2">{sale.total - sale.payment}</td>
                                 <td className="border px-4 py-2">
                                     <Link href={`/sales/${sale.id}/edit`} className="text-blue-500">Edit</Link>
                                     <button

@@ -17,6 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSection }) => {
                 { label: 'Stock Balance', value: 'Stock Balance', route: '/stockbalances' }
             ]
         },
+        { label: 'Financial Report', value: 'Financial Report', route: '/financial-report' },
         {
             label: 'Setup',
             children: [

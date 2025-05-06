@@ -21,6 +21,9 @@ Route::resource('items', ItemController::class);
 Route::resource('payment-methods', PaymentMethodController::class);
 Route::resource('purchases', PurchaseController::class);
 Route::resource('sales', SaleController::class);
+
+Route::get('/stock-balance', [SaleController::class, 'getStockBalance']);
+Route::get('/car-numbers', [SaleController::class, 'getAvailableCarNumber']);
 // routes/web.php
 
 Route::resource('stocks', StockController::class);
